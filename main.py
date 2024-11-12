@@ -53,11 +53,15 @@ def send_imeessage_bluebubbles(message, method='private-api', subject=None):
     return response.json()
 
 
+def get_product_url():
+    return f'https://www.amazon.com/dp/{AMAZON_PRODUCT_ID}'
+
+
 def is_available():
     global waiting_until_unavailable
 
     res = session.get(
-        f'https://www.amazon.com/dp/{AMAZON_PRODUCT_ID}',
+        get_product_url(),
         # Impersonate a browser
         headers={
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -72,9 +76,7 @@ def is_available():
             'Sec-Fetch-Dest': 'document',
             'Cache-Control': 'max-age=0',
             'Pragma': 'no-cache',
-            'Host': 'www.amazon.com',
-            'TE': 'Trailers',
-
+            'Host': 'www.amazon.com'
         }
     )
     res.raise_for_status()
@@ -93,7 +95,7 @@ def check():
     elif available:
         logger.info('Product is now available! Sending iMessage alert...')
         send_imeessage_bluebubbles(
-            f'{IMESSAGE_PREAMBLE if IMESSAGE_PREAMBLE else ''}{AMAZON_PRODUCT_NAME} is now available! https://www.amazon.com/dp/{AMAZON_PRODUCT_ID}',
+            f'{IMESSAGE_PREAMBLE if IMESSAGE_PREAMBLE else ''}{AMAZON_PRODUCT_NAME} is now available! {get_product_url()}',
             subject='Amazon Product Alert!'
         )
 
@@ -108,7 +110,7 @@ if __name__ == '__main__':
     available = is_available()
     if available:
         logger.info(f'Product is already available! Waiting {INTERVAL} seconds before checking again...')
-        # waiting_until_unavailable = True
+        waiting_until_unavailable = True
     else:
         logger.info(f'Product is currently unavailable. Will check again in {INTERVAL} seconds...')
 
